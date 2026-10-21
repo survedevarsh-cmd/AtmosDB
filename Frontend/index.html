@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AtmosDB — Global Meteorological & Aviation Intelligence</title>
+  <meta name="description" content="Interactive global weather and aviation telemetry dashboard powered by real-time SQL analytics across 27 cities and airports worldwide." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- Animated background -->
+  <div class="bg-grid"></div>
+  <div class="bg-orbs">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon">
+        <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+          <circle cx="14" cy="14" r="12" stroke="url(#grad1)" stroke-width="2"/>
+          <path d="M8 14 Q14 6 20 14 Q14 22 8 14Z" fill="url(#grad1)" opacity="0.8"/>
+          <defs>
+            <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#6366f1"/>
+              <stop offset="100%" stop-color="#06b6d4"/>
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+      <div>
+        <div class="brand-name">AtmosDB</div>
+        <div class="brand-sub">Weather Intelligence</div>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Analytics</div>
+      <a href="#" class="nav-item active" data-section="overview" id="nav-overview">
+        <span class="nav-icon">⬡</span>
+        <span>Overview</span>
+      </a>
+      <a href="#" class="nav-item" data-section="queries" id="nav-queries">
+        <span class="nav-icon">⬡</span>
+        <span>SQL Explorer</span>
+      </a>
+      <a href="#" class="nav-item" data-section="cities" id="nav-cities">
+        <span class="nav-icon">⬡</span>
+        <span>City Analytics</span>
+      </a>
+      <a href="#" class="nav-item" data-section="airports" id="nav-airports">
+        <span class="nav-icon">⬡</span>
+        <span>Airport Analytics</span>
+      </a>
+
+      <div class="nav-section-label" style="margin-top:24px">Data Management</div>
+      <a href="#" class="nav-item" data-section="insert" id="nav-insert">
+        <span class="nav-icon">⬡</span>
+        <span>Insert Record</span>
+      </a>
+      <a href="#" class="nav-item" data-section="filter" id="nav-filter">
+        <span class="nav-icon">⬡</span>
+        <span>Filter & Scope</span>
+      </a>
+      <a href="#" class="nav-item" data-section="database" id="nav-database">
+        <span class="nav-icon">⬡</span>
+        <span>Database Browser</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="db-status" id="db-status">
+        <span class="status-dot"></span>
+        <span class="status-text">Connecting…</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="main" id="main">
+
+    <!-- TOP BAR -->
+    <header class="topbar">
+      <button class="menu-btn" id="menu-btn" aria-label="Toggle sidebar">☰</button>
+      <div class="topbar-title" id="topbar-title">Overview Dashboard</div>
+      <div class="topbar-right">
+        <div class="live-badge">
+          <span class="live-dot"></span>
+          <span>Live Data</span>
+        </div>
+        <div class="record-counter" id="record-counter">— records</div>
+      </div>
+    </header>
+
+    <!-- ═══════════════ OVERVIEW SECTION ═══════════════ -->
+    <section class="section active" id="section-overview">
+      <div class="section-header">
+        <h1 class="section-title">Global Atmospheric Intelligence</h1>
+        <p class="section-sub">Real-time meteorological telemetry across 27 cities & airports in 22 countries</p>
+      </div>
+
+      <!-- KPI CARDS -->
+      <div class="kpi-grid" id="kpi-grid">
+        <div class="kpi-card" data-color="indigo">
+          <div class="kpi-icon">🌡️</div>
+          <div class="kpi-value" id="kpi-avg-temp">—</div>
+          <div class="kpi-label">Avg Temperature</div>
+          <div class="kpi-sub" id="kpi-temp-range">—</div>
+        </div>
+        <div class="kpi-card" data-color="cyan">
+          <div class="kpi-icon">💧</div>
+          <div class="kpi-value" id="kpi-avg-humidity">—</div>
+          <div class="kpi-label">Avg Humidity</div>
+          <div class="kpi-sub">Global average</div>
+        </div>
+        <div class="kpi-card" data-color="violet">
+          <div class="kpi-icon">💨</div>
+          <div class="kpi-value" id="kpi-avg-wind">—</div>
+          <div class="kpi-label">Avg Wind Speed</div>
+          <div class="kpi-sub" id="kpi-wind-alerts">—</div>
+        </div>
+        <div class="kpi-card" data-color="emerald">
+          <div class="kpi-icon">🌧️</div>
+          <div class="kpi-value" id="kpi-precip">—</div>
+          <div class="kpi-label">Total Precipitation</div>
+          <div class="kpi-sub">Cumulative all stations</div>
+        </div>
+        <div class="kpi-card" data-color="orange">
+          <div class="kpi-icon">📊</div>
+          <div class="kpi-value" id="kpi-records">—</div>
+          <div class="kpi-label">Total Records</div>
+          <div class="kpi-sub" id="kpi-obs-breakdown">—</div>
+        </div>
+        <div class="kpi-card" data-color="rose">
+          <div class="kpi-icon">⚠️</div>
+          <div class="kpi-value" id="kpi-alerts">—</div>
+          <div class="kpi-label">Severe Alerts</div>
+          <div class="kpi-sub" id="kpi-high-wind">—</div>
+        </div>
+        <div class="kpi-card" data-color="sky">
+          <div class="kpi-icon">🌍</div>
+          <div class="kpi-value" id="kpi-cities">27 Cities</div>
+          <div class="kpi-label">Monitoring Stations</div>
+          <div class="kpi-sub">22 countries covered</div>
+        </div>
+        <div class="kpi-card" data-color="amber">
+          <div class="kpi-icon">✈️</div>
+          <div class="kpi-value" id="kpi-airports">27 Airports</div>
+          <div class="kpi-label">Aviation Nodes</div>
+          <div class="kpi-sub" id="kpi-pressure">—</div>
+        </div>
+      </div>
+
+      <!-- OVERVIEW CHARTS -->
+      <div class="charts-row">
+        <div class="chart-card wide">
+          <div class="chart-header">
+            <div>
+              <div class="chart-title">Temperature Distribution by City</div>
+              <div class="chart-sub">Avg · Min · Max across all monitoring stations</div>
+            </div>
+          </div>
+          <div class="chart-wrap">
+            <canvas id="chart-temp-overview" height="260"></canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-header">
+            <div>
+              <div class="chart-title">Climate Zone Breakdown</div>
+              <div class="chart-sub">Observation density by region</div>
+            </div>
+          </div>
+          <div class="chart-wrap">
+            <canvas id="chart-zone-donut" height="260"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="charts-row">
+        <div class="chart-card">
+          <div class="chart-header">
+            <div>
+              <div class="chart-title">Precipitation Leaders</div>
+              <div class="chart-sub">Total rainfall accumulation (mm)</div>
+            </div>
+          </div>
+          <div class="chart-wrap">
+            <canvas id="chart-precip-bar" height="260"></canvas>
+          </div>
+        </div>
+        <div class="chart-card wide">
+          <div class="chart-header">
+            <div>
+              <div class="chart-title">Wind Speed vs Humidity Correlation</div>
+              <div class="chart-sub">Scatter analysis per city</div>
+            </div>
+          </div>
+          <div class="chart-wrap">
+            <canvas id="chart-scatter" height="260"></canvas>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════ SQL EXPLORER SECTION ═══════════════ -->
+    <section class="section" id="section-queries">
+      <div class="section-header">
+        <h1 class="section-title">SQL Query Explorer</h1>
+        <p class="section-sub">Execute pre-built queries against the live database — GROUP BY, JOINs, aggregates & more</p>
+      </div>
+
+      <div class="query-layout">
+        <!-- Query Selector Panel -->
+        <div class="query-panel">
+          <div class="panel-label">Select a Query</div>
+          <div class="query-list" id="query-list">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <!-- Query Detail + Results -->
+        <div class="query-detail" id="query-detail">
+          <div class="query-empty-state">
+            <div class="empty-icon">⬡</div>
+            <div class="empty-title">Choose a query to run</div>
+            <div class="empty-sub">Select from the panel on the left to view the SQL and results</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════ CITY ANALYTICS SECTION ═══════════════ -->
+    <section class="section" id="section-cities">
+      <div class="section-header">
+        <h1 class="section-title">City Analytics</h1>
+        <p class="section-sub">Grouped aggregate statistics per monitoring station — temperature, humidity, wind & precipitation</p>
+      </div>
+
+      <!-- Search & Sort bar -->
+      <div class="table-toolbar">
+        <div class="search-wrap">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="city-search" class="search-input" placeholder="Search city or country…" />
+        </div>
+        <div class="sort-wrap">
+          <label class="sort-label">Sort by:</label>
+          <select id="city-sort" class="sort-select">
+            <option value="avg_temp_c">Avg Temp</option>
+            <option value="avg_humidity_pct">Humidity</option>
+            <option value="avg_wind_speed_kmh">Wind Speed</option>
+            <option value="total_precipitation_mm">Precipitation</option>
+            <option value="avg_pressure_hpa">Pressure</option>
+            <option value="count_records">Record Count</option>
+          </select>
+          <button class="sort-dir-btn" id="sort-dir-btn" title="Toggle direction">↓</button>
+        </div>
+      </div>
+
+      <div class="table-wrap" id="city-table-wrap">
+        <table class="data-table" id="city-table">
+          <thead>
+            <tr>
+              <th>City</th>
+              <th>Country</th>
+              <th>Avg Temp</th>
+              <th>Min / Max</th>
+              <th>Humidity</th>
+              <th>Wind</th>
+              <th>Pressure</th>
+              <th>Precipitation</th>
+              <th>Records</th>
+            </tr>
+          </thead>
+          <tbody id="city-tbody"></tbody>
+        </table>
+      </div>
+
+      <!-- City detail charts (shown when row clicked) -->
+      <div class="city-detail-panel" id="city-detail-panel" style="display:none">
+        <div class="city-detail-header">
+          <span class="city-detail-name" id="city-detail-name"></span>
+          <button class="close-btn" id="city-detail-close">✕</button>
+        </div>
+        <div class="charts-row">
+          <div class="chart-card">
+            <div class="chart-title" style="padding:12px 16px 0">Temperature Profile</div>
+            <div class="chart-wrap"><canvas id="chart-city-temp" height="200"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title" style="padding:12px 16px 0">Weather Metrics</div>
+            <div class="chart-wrap"><canvas id="chart-city-metrics" height="200"></canvas></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════ AIRPORT ANALYTICS SECTION ═══════════════ -->
+    <section class="section" id="section-airports">
+      <div class="section-header">
+        <h1 class="section-title">Airport Analytics</h1>
+        <p class="section-sub">Aviation-focused meteorological telemetry for 27 international airports</p>
+      </div>
+
+      <div class="table-toolbar">
+        <div class="search-wrap">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="airport-search" class="search-input" placeholder="Search airport or country…" />
+        </div>
+        <div class="sort-wrap">
+          <label class="sort-label">Sort by:</label>
+          <select id="airport-sort" class="sort-select">
+            <option value="avg_temp_c">Avg Temp</option>
+            <option value="avg_wind_speed_kmh">Wind Speed</option>
+            <option value="avg_humidity_pct">Humidity</option>
+            <option value="total_precipitation_mm">Precipitation</option>
+          </select>
+          <button class="sort-dir-btn" id="airport-sort-dir" title="Toggle direction">↓</button>
+        </div>
+      </div>
+
+      <div class="airport-grid" id="airport-grid">
+        <!-- Cards populated by JS -->
+      </div>
+    </section>
+
+    <!-- ═══════════════ INSERT SECTION ═══════════════ -->
+    <section class="section" id="section-insert">
+      <div class="section-header">
+        <h1 class="section-title">Insert Telemetry Record</h1>
+        <p class="section-sub">Perform a validated multi-table transactional INSERT into the live database</p>
+      </div>
+
+      <div class="insert-layout">
+        <div class="insert-form-card">
+          <div class="form-grid">
+            <div class="form-group full">
+              <label class="form-label" for="ins-city">City Name <span class="required">*</span></label>
+              <select class="form-select" id="ins-city">
+                <option value="">— Select a city —</option>
+              </select>
+            </div>
+            <div class="form-group full">
+              <label class="form-label" for="ins-airport">Airport Name <span class="optional">(optional)</span></label>
+              <select class="form-select" id="ins-airport">
+                <option value="">— Select an airport —</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="ins-temp">Temperature (°C)</label>
+              <input type="number" class="form-input" id="ins-temp" step="0.1" value="21.5" />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="ins-humidity">Humidity (%)</label>
+              <input type="number" class="form-input" id="ins-humidity" step="0.1" value="65.0" min="0" max="100" />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="ins-wind">Wind Speed (km/h)</label>
+              <input type="number" class="form-input" id="ins-wind" step="0.1" value="15.0" min="0" />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="ins-wind-dir">Wind Direction (°)</label>
+              <input type="number" class="form-input" id="ins-wind-dir" step="1" value="180" min="0" max="360" />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="ins-pressure">Pressure (hPa)</label>
+              <input type="number" class="form-input" id="ins-pressure" step="0.1" value="1013.25" />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="ins-precip">Precipitation (mm)</label>
+              <input type="number" class="form-input" id="ins-precip" step="0.1" value="0.0" min="0" />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="ins-cloud">Cloud Cover (%)</label>
+              <input type="number" class="form-input" id="ins-cloud" step="0.1" value="20.0" min="0" max="100" />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="ins-wx">WX String</label>
+              <input type="text" class="form-input" id="ins-wx" value="CAVOK" />
+            </div>
+          </div>
+
+          <button class="btn-primary insert-btn" id="insert-submit-btn">
+            <span class="btn-icon">⚡</span>
+            Execute INSERT
+          </button>
+        </div>
+
+        <!-- SQL Preview + Result -->
+        <div class="insert-result-panel">
+          <div class="result-panel-header">Generated SQL</div>
+          <pre class="sql-block" id="insert-sql-preview"><code>-- Fill the form and click Execute INSERT
+-- The generated SQL will appear here</code></pre>
+          <div id="insert-result-msg" class="result-msg" style="display:none"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════ FILTER SECTION ═══════════════ -->
+    <section class="section" id="section-filter">
+      <div class="section-header">
+        <h1 class="section-title">Database Filter & Scope Engine</h1>
+        <p class="section-sub">Apply WHERE conditions with GROUP BY aggregation to dynamically scope the dataset</p>
+      </div>
+
+      <div class="filter-layout">
+        <div class="filter-controls-card">
+          <div class="filter-row">
+            <div class="form-group">
+              <label class="form-label">Attribute</label>
+              <select class="form-select" id="filter-attr">
+                <option value="temperature_c">Temperature (°C)</option>
+                <option value="humidity_pct">Humidity (%)</option>
+                <option value="wind_speed_kmh">Wind Speed (km/h)</option>
+                <option value="apparent_temp_c">Apparent Temp (°C)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Operator</label>
+              <select class="form-select" id="filter-op">
+                <option value="gt">Greater Than (&gt;)</option>
+                <option value="lt">Less Than (&lt;)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Threshold</label>
+              <input type="number" class="form-input" id="filter-threshold" value="20" step="0.5" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Row Limit</label>
+              <input type="number" class="form-input" id="filter-row-limit" value="15000" step="1000" min="1000" max="80000" />
+            </div>
+          </div>
+
+          <div class="filter-btn-row">
+            <button class="btn-primary" id="filter-run-btn">
+              <span>▶</span> Run Filter Query
+            </button>
+            <button class="btn-secondary" id="filter-reset-btn">
+              ↺ Reset to Full DB
+            </button>
+          </div>
+
+          <div class="sql-label">Generated SQL</div>
+          <pre class="sql-block" id="filter-sql-block"><code>SELECT city_name, COUNT(*) AS record_count,
+  AVG(temperature_c) AS avg_temp,
+  AVG(humidity_pct)  AS avg_humidity
+FROM center_hourly_weather_data
+INNER JOIN cities USING (city_id)
+WHERE temperature_c > 20
+GROUP BY city_name
+ORDER BY avg_temp DESC
+LIMIT 15000;</code></pre>
+        </div>
+
+        <div class="filter-result-panel">
+          <div class="filter-kpis" id="filter-kpi-panel">
+            <!-- Filtered KPIs injected here -->
+          </div>
+          <div class="charts-row" style="margin-top:0">
+            <div class="chart-card">
+              <div class="chart-title" style="padding:12px 16px 0">Climate Distribution</div>
+              <div class="chart-wrap"><canvas id="chart-filter-donut" height="220"></canvas></div>
+            </div>
+            <div class="chart-card">
+              <div class="chart-title" style="padding:12px 16px 0">Temperature Spread</div>
+              <div class="chart-wrap"><canvas id="chart-filter-temp" height="220"></canvas></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════ DATABASE BROWSER SECTION ═══════════════ -->
+    <section class="section" id="section-database">
+      <div class="section-header">
+        <h1 class="section-title">Database Browser</h1>
+        <p class="section-sub">Browse, edit, and delete raw records directly from the SQLite database</p>
+      </div>
+
+      <!-- Table selector + controls -->
+      <div class="db-browser-toolbar">
+        <div class="db-tab-group">
+          <button class="db-tab active" id="dbtab-city" data-table="city">🌆 City Weather Records</button>
+          <button class="db-tab" id="dbtab-airport" data-table="airport">✈️ Airport Weather Records</button>
+        </div>
+        <div class="db-browser-right">
+          <div class="search-wrap" style="min-width:200px;max-width:280px">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="db-search" class="search-input" placeholder="Filter city / airport…" />
+          </div>
+          <select class="sort-select" id="db-limit-select">
+            <option value="50">50 rows</option>
+            <option value="100" selected>100 rows</option>
+            <option value="200">200 rows</option>
+            <option value="500">500 rows</option>
+          </select>
+          <button class="btn-primary" id="db-load-btn" style="width:auto;padding:8px 18px;font-size:13px">
+            Load Data
+          </button>
+        </div>
+      </div>
+
+      <!-- Pagination info + controls -->
+      <div class="db-pagination-bar">
+        <span class="db-info-text" id="db-info-text">—</span>
+        <div class="db-page-btns">
+          <button class="db-page-btn" id="db-prev-btn" disabled>← Prev</button>
+          <span class="db-page-num" id="db-page-num">Page 1</span>
+          <button class="db-page-btn" id="db-next-btn">Next →</button>
+        </div>
+      </div>
+
+      <!-- Raw table -->
+      <div class="table-wrap" id="db-table-wrap">
+        <div class="db-empty-state" id="db-empty-state">
+          <div class="empty-icon">🗄️</div>
+          <div class="empty-title">Select a table and click Load Data</div>
+          <div class="empty-sub">Browse raw records from the live SQLite database</div>
+        </div>
+        <table class="data-table" id="db-table" style="display:none">
+          <thead id="db-thead"></thead>
+          <tbody id="db-tbody"></tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ═══════════════ EDIT MODAL ═══════════════ -->
+  <div class="modal-overlay" id="edit-modal" style="display:none">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div>
+          <div class="modal-title">Edit Record</div>
+          <div class="modal-sub" id="modal-record-label">Record #—</div>
+        </div>
+        <button class="close-btn" id="modal-close-btn">✕</button>
+      </div>
+
+      <div class="modal-sql-preview">
+        <div class="sql-label" style="margin-bottom:6px">Generated SQL</div>
+        <pre class="sql-block" id="modal-sql-preview" style="max-height:110px;overflow-y:auto"><code>-- Edit fields below to preview the UPDATE statement</code></pre>
+      </div>
+
+      <div class="modal-fields" id="modal-fields"></div>
+
+      <div class="modal-footer">
+        <button class="btn-secondary" id="modal-cancel-btn">Cancel</button>
+        <button class="btn-primary" id="modal-save-btn" style="width:auto;padding:10px 28px">
+          <span class="btn-icon">💾</span> Save Changes
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- DELETE CONFIRM MODAL -->
+  <div class="modal-overlay" id="delete-modal" style="display:none">
+    <div class="modal-card" style="max-width:420px">
+      <div class="modal-header">
+        <div class="modal-title" style="color:var(--rose)">⚠️ Confirm Delete</div>
+        <button class="close-btn" id="del-modal-close">✕</button>
+      </div>
+      <p class="modal-sub" id="del-modal-text" style="margin:16px 0">Are you sure you want to permanently delete this record?</p>
+      <div class="sql-label" style="margin-bottom:6px">Generated SQL</div>
+      <pre class="sql-block" id="del-modal-sql" style="max-height:80px"><code>DELETE FROM center_hourly_weather_data WHERE record_id = ?;</code></pre>
+      <div class="modal-footer" style="margin-top:20px">
+        <button class="btn-secondary" id="del-modal-cancel">Cancel</button>
+        <button class="btn-primary" id="del-modal-confirm" style="width:auto;padding:10px 24px;background:linear-gradient(135deg,var(--rose),#be185d)">
+          🗑 Delete Record
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div class="toast" id="toast"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
